@@ -9,7 +9,7 @@ let isRelease = false
 let isRelease = true
 #endif
 
-let getLogger () =
+let logger =
     let mutable config = LoggerConfiguration()
 
     if not isRelease then
