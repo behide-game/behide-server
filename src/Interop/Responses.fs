@@ -1,44 +1,26 @@
 namespace BehideServer.Types
 
 [<RequireQualifiedAccess>]
-type private ResponseHeader =
+type ResponseHeader =
     | Ping = 1uy
+    /// Contain PlayerId <see cref="PlayerId"/>
     | PlayerRegistered = 2uy
     | PlayerNotRegistered = 3uy
-    | RoomRegistered = 4uy
-    | RoomNotRegistered = 5uy
+    /// Contain RoomId <see cref="RoomId"/>
+    | RoomCreated = 4uy
+    | RoomNotCreated = 5uy
+    | RoomDeleted = 6uy
+    | RoomNotDeleted = 7uy
     | BadServerVersion = 254uy
     | FailedToParseMsg = 255uy
 
 [<RequireQualifiedAccess>]
 type Response =
-    | Ping
-    | PlayerRegistered of PlayerId
-    | PlayerNotRegistered
-    | RoomRegistered of RoomId
-    | RoomNotRegistered
-    | BadServerVersion
-    | FailedToParseMsg
+    { Header: ResponseHeader
+      Content: byte [] }
 
-    static member ToBytes msg =
-        let header =
-            match msg with
-            | Ping -> ResponseHeader.Ping
-            | PlayerRegistered _ -> ResponseHeader.PlayerRegistered
-            | PlayerNotRegistered -> ResponseHeader.PlayerNotRegistered
-            | RoomRegistered _ -> ResponseHeader.RoomRegistered
-            | RoomNotRegistered -> ResponseHeader.RoomNotRegistered
-            | BadServerVersion -> ResponseHeader.BadServerVersion
-            | FailedToParseMsg -> ResponseHeader.FailedToParseMsg
-            |> byte
-
-        let content =
-            match msg with
-            | PlayerRegistered x -> x |> PlayerId.ToBytes
-            | RoomRegistered x -> x |> RoomId.ToBytes
-            | _ -> [||]
-
-        Array.append [| header |] content
+    static member ToBytes response =
+        Array.append ([| response.Header |> byte |]) response.Content
 
     member this.ToBytes() = this |> Response.ToBytes
 
@@ -46,21 +28,27 @@ type Response =
         let header = bytes |> Seq.head
         let content = bytes |> Seq.tail |> Seq.toArray
 
+        let createResponse header content =
+            { Header = (header |> LanguagePrimitives.EnumOfValue)
+              Content = content }
+            |> Some
+
         let parsedResponseOpt =
             match header |> LanguagePrimitives.EnumOfValue, content with
-            | ResponseHeader.Ping, [||] -> Some Ping
-            | ResponseHeader.PlayerRegistered, content ->
-                content
-                |> PlayerId.TryParseBytes
-                |> Option.map PlayerRegistered
-            | ResponseHeader.RoomRegistered, content ->
-                content
-                |> RoomId.TryParseBytes
-                |> Option.map RoomRegistered
-            | ResponseHeader.BadServerVersion, [| |] -> Some BadServerVersion
-            | ResponseHeader.FailedToParseMsg, [| |] -> Some FailedToParseMsg
+            | ResponseHeader.Ping, [||]
+            | ResponseHeader.PlayerNotRegistered, [||]
+            | ResponseHeader.RoomNotCreated, [||]
+            | ResponseHeader.RoomDeleted, [||]
+            | ResponseHeader.RoomNotDeleted, [||]
+            | ResponseHeader.BadServerVersion, [||]
+            | ResponseHeader.FailedToParseMsg, [||] -> createResponse header [||]
+            | ResponseHeader.PlayerRegistered, content when content.Length = 16 -> // 16 is the length of a guid
+                createResponse header content
+            | ResponseHeader.RoomCreated, content when content.Length = 4 -> createResponse header content
             | _ -> None
 
         match parsedResponseOpt with
-        | Some x -> out <- x; true
+        | Some x ->
+            out <- x
+            true
         | None -> false

@@ -1,90 +1,66 @@
-module BehideServer.App
+module BehideServer.Program
 
+open BehideServer
 open BehideServer.Types
+open BehideServer.Helpers
+open BehideServer.Log
+
 open System
 open System.Net
-open Serilog
 open SuperSimpleTcp
 
 let listenPort = 28000
 
-let sendResponse (tcp: SimpleTcpServer) ipPort response =
-    tcp.SendAsync(ipPort, response |> Response.ToBytes)
-    |> Async.AwaitTask
-    |> Async.Start
-
-let proceedMsg (log: ILogger) msgOpt =
-    match msgOpt with
-    | None ->
-        log.Error "Failed to parse message"
-        Response.PlayerNotRegistered
-    | Some msg ->
-        match msg with
-        | Msg.Ping -> Response.Ping
-        | Msg.RegisterPlayer (clientVersion, username) ->
-            let localVersion = Version.GetVersion()
-
-            match clientVersion <> localVersion with
-            | true -> Response.BadServerVersion
-            | false ->
-                let player =
-                    { Id = Id.CreateOf PlayerId
-                      Username = username }
-
-                player
-                |> State.Msg.RegisterPlayer
-                |> State.updateState
-                |> function
-                    | true -> Response.PlayerRegistered player.Id
-                    | false -> Response.PlayerNotRegistered
-        | Msg.RegisterRoom (playerId, epicId) ->
-            let creatorOpt =
-                State.state.Players.Values
-                |> Seq.tryFind (fun player -> player.Id = playerId)
-
-            match creatorOpt with
-            | Some creator ->
-                let room =
-                    { Id = RoomId.Create()
-                      EpicId = epicId
-                      Creator = creator.Id
-                      Players = [| creator |] }
-
-                room
-                |> State.Msg.CreateRoom
-                |> State.updateState
-                |> function
-                    | true -> Response.RoomRegistered room.Id
-                    | false -> Response.RoomNotRegistered
-            | None -> Response.RoomNotRegistered
+let onDisconnect (x: ConnectionEventArgs) =
+    // Unregister the player
+    State.state.Players
+    |> Seq.tryFind (fun kv -> kv.Value.IpPort = x.IpPort)
+    |> Option.map (fun player -> player.Key)
+    |> Option.map State.state.Players.TryRemove
+    |> function
+        | Some (true, player) -> Log.debug "Removed %s from registered players" player.Username
+        | Some (false, _) -> Log.debug "Failed to remove player who has disconnected"
+        | None -> Log.debug "Player who has disconnected was not registered: %A" x.IpPort
 
 [<EntryPoint>]
 let main _ =
-    let log = Common.logger
     let localIP = Common.getLocalIP ()
     let localEP = IPEndPoint(localIP, listenPort)
 
     let tcp = new SimpleTcpServer(localEP |> string)
     tcp.Start()
 
-    log.Information $"Server started at {localEP}"
+    Log.info "Server started at %A" localEP
 
-    tcp.Events.ClientConnected.Add(fun x -> log.Debug $"Client connected: {x.IpPort}")
-    tcp.Events.ClientDisconnected.Add(fun x -> log.Debug $"Client disconnected: {x.Reason}")
+    tcp.Events.ClientConnected.Add(fun x -> Log.debug "Client connected: %A" x.IpPort)
+    tcp.Events.ClientDisconnected.Add onDisconnect
 
     tcp.Events.DataReceived.Add(fun x ->
-        log.Debug $"Received msg: {x.Data |> Msg.TryParse}"
-
         x.Data
         |> Msg.TryParse
-        |> proceedMsg log
-        |> sendResponse tcp x.IpPort
+        |> Option.map (App.proceedMsg x.IpPort)
+        |> Option.defaultValue FailedToParseMsg
+        |> ResponseBuilder.ToResponse
+        |> Response.ToBytes
+        |> App.sendResponse tcp x.IpPort
     )
 
     while true do
         Console.ReadKey true |> ignore
 
-        State.state.Players |> Seq.iter (fun x -> printfn "%A" x.Value)
-        State.state.Rooms |> Seq.iter (fun x -> printfn "%A" x.Value)
+        if not State.state.Players.IsEmpty || not State.state.Rooms.IsEmpty then
+            Log.debug "[STATE] -> Players: %i; Rooms: %i" State.state.Players.Count State.state.Rooms.Count
+
+            Log.debug "[STATE] -> Players: %i" State.state.Players.Count
+            State.state.Players
+            |> Seq.indexed
+            |> Seq.iter (fun (index, element) -> Log.debug "\t[Player] %i: %A" index element)
+
+            Log.debug "[STATE] -> Rooms: %i" State.state.Rooms.Count
+            State.state.Rooms
+            |> Seq.indexed
+            |> Seq.iter (fun (index, element) -> Log.debug "\t[Room] %i: %A" index element)
+        else
+            Log.debug "[STATE] -> State is empty"
 
     0

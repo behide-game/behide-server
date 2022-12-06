@@ -5,8 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="./Interop/BehideServer.Interop.fsproj" />
+    <Compile Include="Helpers.fs" />
     <Compile Include="Common.fs" />
+    <Compile Include="Log.fs" />
     <Compile Include="State.fs" />
+    <Compile Include="App.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
