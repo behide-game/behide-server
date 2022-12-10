@@ -102,5 +102,5 @@ type RoomId =
 type Room =
     { Id: RoomId
       EpicId: Id
-      Creator: PlayerId
+      Owner: PlayerId
       Players: Player [] }

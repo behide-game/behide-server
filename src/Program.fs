@@ -27,11 +27,13 @@ let main _ =
     let localIP = Common.getLocalIP ()
     let localEP = IPEndPoint(localIP, listenPort)
 
+    // Start server
     let tcp = new SimpleTcpServer(localEP |> string)
     tcp.Start()
 
     Log.info "Server started at %A" localEP
 
+    // Setup events
     tcp.Events.ClientConnected.Add(fun x -> Log.debug "Client connected: %A" x.IpPort)
     tcp.Events.ClientDisconnected.Add onDisconnect
 
@@ -45,6 +47,8 @@ let main _ =
         |> App.sendResponse tcp x.IpPort
     )
 
+#if DEBUG
+    // Setup the debug log system
     while true do
         Console.ReadKey true |> ignore
 
@@ -53,14 +57,15 @@ let main _ =
 
             Log.debug "[STATE] -> Players: %i" State.state.Players.Count
             State.state.Players
-            |> Seq.indexed
-            |> Seq.iter (fun (index, element) -> Log.debug "\t[Player] %i: %A" index element)
+            |> Seq.iteri (fun index element -> Log.debug "\t[STATE] -> [PLAYER] %i: %A" index element)
 
             Log.debug "[STATE] -> Rooms: %i" State.state.Rooms.Count
             State.state.Rooms
-            |> Seq.indexed
-            |> Seq.iter (fun (index, element) -> Log.debug "\t[Room] %i: %A" index element)
+            |> Seq.iteri (fun index element -> Log.debug "\t[STATE] -> [ROOM] %i: %A" index element)
         else
             Log.debug "[STATE] -> State is empty"
+#else
+    while true do Console.ReadKey true |> ignore
+#endif
 
     0

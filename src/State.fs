@@ -15,8 +15,8 @@ type Msg =
     | RemoveRoom of RoomId
 
 let state =
-    { Rooms = new ConcurrentDictionary<RoomId, Room>()
-      Players = new ConcurrentDictionary<PlayerId, Player>() }
+    { Players = new ConcurrentDictionary<PlayerId, Player>()
+      Rooms = new ConcurrentDictionary<RoomId, Room>() }
 
 let updateState (event: Msg) =
     match event with
@@ -24,3 +24,22 @@ let updateState (event: Msg) =
     | Msg.UnregisterPlayer playerId -> state.Players.TryRemove(playerId, unbox ())
     | Msg.CreateRoom room -> state.Rooms.TryAdd(room.Id, room)
     | Msg.RemoveRoom roomId -> state.Rooms.TryRemove(roomId, unbox ())
+
+
+module Players =
+    let tryGet playerId =
+        state.Players.TryGetValue playerId
+        |> function
+            | true, x -> Some x
+            | false, _ -> None
+
+    let tryGetFromIpPort ipPort =
+        state.Players.Values
+        |> Seq.tryFind (fun player -> player.IpPort = ipPort)
+
+module Rooms =
+    let tryGet roomId =
+        state.Rooms.TryGetValue roomId
+        |> function
+            | true, x -> Some x
+            | false, _ -> None

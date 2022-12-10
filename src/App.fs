@@ -14,10 +14,9 @@ let proceedMsg ipPort msg =
     match msg with
     | Msg.Ping -> Ping
     | Msg.RegisterPlayer (clientVersion, username) ->
-        let localVersion = Version.GetVersion()
-
-        match clientVersion <> localVersion with
+        match clientVersion <> Version.GetVersion() with
         | true -> BadServerVersion
+        | false when username.Length < 1 -> PlayerNotRegistered
         | false ->
             let player =
                 { Id = Id.CreateOf PlayerId
@@ -31,16 +30,13 @@ let proceedMsg ipPort msg =
                 | true -> PlayerRegistered player.Id
                 | false -> PlayerNotRegistered
     | Msg.CreateRoom (playerId, epicId) ->
-        let creatorOpt =
-            State.state.Players.Values
-            |> Seq.tryFind (fun player -> player.Id = playerId)
-
-        match creatorOpt with
+        match State.Players.tryGet playerId with
+        | None -> RoomNotCreated
         | Some creator ->
             let room =
                 { Id = RoomId.Create()
                   EpicId = epicId
-                  Creator = creator.Id
+                  Owner = creator.Id
                   Players = [| creator |] }
 
             room
@@ -49,16 +45,17 @@ let proceedMsg ipPort msg =
             |> function
                 | true -> RoomCreated room.Id
                 | false -> RoomNotCreated
-        | None -> RoomNotCreated
     | Msg.DeleteRoom roomId ->
-        State.state.Rooms.Values
-        |> Seq.tryFind (fun room -> room.Id = roomId)
-        |> function
-            | Some _ ->
-                roomId
-                |> State.state.Rooms.TryRemove
-                |> function
-                    | true, _ -> RoomDeleted
-                    | false, _ -> RoomNotDeleted
-            | None -> RoomNotDeleted
+        let playerIdOpt = State.Players.tryGetFromIpPort ipPort
+        let roomOpt = State.Rooms.tryGet roomId
+
+        match playerIdOpt.IsSome && roomOpt.IsSome with
+        | true ->
+            roomId
+            |> State.state.Rooms.TryRemove
+            |> function
+                | true, _ -> RoomDeleted
+                | false, _ -> RoomNotDeleted
+        | _ -> RoomNotDeleted
+
     |> tap (Log.debug "%A")

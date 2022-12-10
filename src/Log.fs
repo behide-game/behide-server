@@ -11,8 +11,7 @@ let private logger =
     else
         config <-
             config
-                .MinimumLevel
-                .Information()
+                .MinimumLevel.Information()
                 .WriteTo.File("logs/log.txt", rollingInterval = RollingInterval.Day)
 
     config.WriteTo.Console().CreateLogger()
