@@ -24,7 +24,7 @@ type Response =
 
     member this.ToBytes() = this |> Response.ToBytes
 
-    static member TryParse(bytes: #seq<byte>, out: Response outref) : bool = // Use outref instead of option because this function is mainly used by the game so in C#
+    static member TryParse'(bytes: #seq<byte>) : Response option =
         let header = bytes |> Seq.head
         let content = bytes |> Seq.tail |> Seq.toArray
 
@@ -33,19 +33,21 @@ type Response =
               Content = content }
             |> Some
 
-        let parsedResponseOpt =
-            match header |> LanguagePrimitives.EnumOfValue, content with
-            | ResponseHeader.Ping, [||]
-            | ResponseHeader.PlayerNotRegistered, [||]
-            | ResponseHeader.RoomNotCreated, [||]
-            | ResponseHeader.RoomDeleted, [||]
-            | ResponseHeader.RoomNotDeleted, [||]
-            | ResponseHeader.BadServerVersion, [||]
-            | ResponseHeader.FailedToParseMsg, [||] -> createResponse header [||]
-            | ResponseHeader.PlayerRegistered, content when content.Length = 16 -> // 16 is the length of a guid
-                createResponse header content
-            | ResponseHeader.RoomCreated, content when content.Length = 4 -> createResponse header content
-            | _ -> None
+        match header |> LanguagePrimitives.EnumOfValue, content with
+        | ResponseHeader.Ping, [||]
+        | ResponseHeader.PlayerNotRegistered, [||]
+        | ResponseHeader.RoomNotCreated, [||]
+        | ResponseHeader.RoomDeleted, [||]
+        | ResponseHeader.RoomNotDeleted, [||]
+        | ResponseHeader.BadServerVersion, [||]
+        | ResponseHeader.FailedToParseMsg, [||] -> createResponse header [||]
+        | ResponseHeader.PlayerRegistered, content when content.Length = 16 -> // 16 is the length of a guid
+            createResponse header content
+        | ResponseHeader.RoomCreated, content when content.Length = 4 -> createResponse header content
+        | _ -> None
+
+    static member TryParse(bytes: #seq<byte>, out: Response outref) : bool =
+        let parsedResponseOpt = bytes |> Response.TryParse'
 
         match parsedResponseOpt with
         | Some x ->
