@@ -24,14 +24,11 @@ let onDisconnect (x: ConnectionEventArgs) =
 
 [<EntryPoint>]
 let main _ =
-    let localIP = Common.getLocalIP ()
-    let localEP = IPEndPoint(localIP, listenPort)
-
     // Start server
-    let tcp = new SimpleTcpServer(localEP |> string)
+    let tcp = new SimpleTcpServer(listenPort |> Common.getLocalEP |> string)
     tcp.Start()
 
-    Log.info "Server started at %A" localEP
+    Log.info "Server started at %A" (listenPort |> Common.getLocalEP)
 
     // Setup events
     tcp.Events.ClientConnected.Add(fun x -> Log.debug "Client connected: %A" x.IpPort)

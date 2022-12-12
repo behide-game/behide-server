@@ -13,3 +13,5 @@ let getLocalIP () =
     |> Dns.GetHostEntry
     |> fun x -> x.AddressList
     |> Array.find (fun x -> x.AddressFamily = Sockets.AddressFamily.InterNetwork)
+
+let getLocalEP listenPort = IPEndPoint(getLocalIP(), listenPort)
