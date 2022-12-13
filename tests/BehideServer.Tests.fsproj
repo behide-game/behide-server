@@ -5,11 +5,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../src/BehideServer.fsproj" />
+    <Compile Include="Common.fs" />
     <Compile Include="tests/Response.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Expecto" Version="9.0.4" />
+    <PackageReference Include="FSharpx.Async" Version="1.14.1" />
     <PackageReference Include="SuperSimpleTcp" Version="3.0.5" />
   </ItemGroup>
 </Project>

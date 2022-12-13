@@ -1,32 +1,33 @@
 module BehideServer.Tests.Response
 
 open Expecto
-open SuperSimpleTcp
 open BehideServer
+open BehideServer.Tests.Common
 open BehideServer.Types
 
 [<Tests>]
 let tests =
     testList "Server response" [
-        // testCaseAsync "Register player" (async {
-        //     let tcp = new SimpleTcpClient(Common.getLocalEP 28000)
+        testAsync "Server version checking" {
+            let tcp = getTcpClient()
 
-        //     tcp.Events.DataReceived.Add (fun e ->
-        //         e.Data
-        //         |> Response.TryParse'
-        //         |> fun responseOpt -> Expect.wantSome responseOpt "Response should be parsable"
-        //         |> fun response -> response.Header
-        //         |> function
-        //             | ResponseHeader.PlayerRegistered -> false
-        //             | _ -> false
-        //         |> fun res -> Expect.isTrue res "Response header should be PlayerRegistered"
-        //     )
+            (Version.GetVersion() + " fake version", "test user")
+            |> Msg.RegisterPlayer
+            |> Msg.ToBytes
+            |> tcp.Send
 
-        //     tcp.Connect()
+            do! expectLastResponseHeader ResponseHeader.BadServerVersion
+        }
 
-        //     (Version.GetVersion(), "test user")
-        //     |> Msg.RegisterPlayer
-        //     |> Msg.ToBytes
-        //     |> tcp.Send
-        // })
+        testAsync "Register player" {
+            let tcp = getTcpClient()
+
+            (Version.GetVersion(), "test user")
+            |> Msg.RegisterPlayer
+            |> Msg.ToBytes
+            |> tcp.Send
+
+            do! expectLastResponseHeader ResponseHeader.PlayerRegistered
+        }
     ]
+    |> testSequenced
