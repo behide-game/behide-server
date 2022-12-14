@@ -11,4 +11,4 @@ let main args =
 
     Common.connectTcp ()
 
-    runTestsInAssemblyWithCLIArgs [] args
+    runTestsInAssemblyWithCLIArgs [ JUnit_Summary "TestResults.xml" ] args
