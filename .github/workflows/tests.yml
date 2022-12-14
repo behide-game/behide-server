@@ -21,3 +21,9 @@ jobs:
 
     - name: Perform tests
       run: dotnet run --no-build --project ./tests/BehideServer.Tests.fsproj
+
+    - name: Test Summary
+      uses: test-summary/action@v2
+      with:
+        paths: "TestResults.xml"
+      if: always()
