@@ -9,6 +9,4 @@ let main args =
     async { BehideServer.Program.main [||] |> ignore }
     |> Async.Start
 
-    Common.connectTcp ()
-
     runTestsInAssemblyWithCLIArgs [ JUnit_Summary "TestResults.xml" ] args

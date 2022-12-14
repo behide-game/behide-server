@@ -7,27 +7,38 @@ open Expecto
 open SuperSimpleTcp
 open FSharpx.Control
 
-let caughtResponses = BlockingQueueAgent<Response option> 1
+module Expect =
+    let wantSome message x = Expect.wantSome x message
 
-let private tcpClient = new SimpleTcpClient(Common.getLocalEP 28000)
-let connectTcp () =
-    tcpClient.Events.DataReceived.Add (fun e ->
+module Response =
+    let expectHeader (expectedHeader: ResponseHeader) (response: Response) : Response =
+        match response.Header = expectedHeader with
+        | true -> response
+        | false -> failtestf "Response header should be %A but instead it's %A." expectedHeader response.Header
+
+
+type TestTcpClient() =
+    let tcp = new SimpleTcpClient(Common.getLocalEP 28000)
+    let caughtResponses = BlockingQueueAgent<Response option> 10
+
+    do tcp.Events.DataReceived.Add (fun e ->
         e.Data
         |> Response.TryParse'
-        |> caughtResponses.Add
-    )
+        |> caughtResponses.Add)
+    do tcp.Connect()
 
-    tcpClient.Connect()
+    member _.SendMessage msg = msg |> Msg.ToBytes |> tcp.Send
+    member _.AwaitResponse() =
+        caughtResponses.AsyncGet()
+        |> Async.map (Expect.wantSome "Response should be parsable.")
 
-let getTcpClient () = tcpClient
+    member this.RegisterPlayer() =
+        (Version.GetVersion(), "test user")
+        |> Msg.RegisterPlayer
+        |> this.SendMessage
 
-
-let expectLastResponseHeader (expectedHeader: ResponseHeader) =
-    async {
-        let! responseOpt = caughtResponses.AsyncGet()
-        let response = Expect.wantSome responseOpt "Response should be parsable"
-
-        match response.Header = expectedHeader with
-        | true -> ()
-        | false -> failtestf "Response header should be %A but instead it's %A" expectedHeader response.Header
-    }
+        this.AwaitResponse()
+        |> Async.map (Response.expectHeader ResponseHeader.PlayerRegistered)
+        |> Async.map (fun response -> response.Content)
+        |> Async.map PlayerId.TryParseBytes
+        |> Async.map (Expect.wantSome "PlayerId should be parsable.")
