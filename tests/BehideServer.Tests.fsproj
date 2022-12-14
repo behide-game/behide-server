@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../src/BehideServer.fsproj" />
     <Compile Include="Common.fs" />
+    <Compile Include="tests/Parsing.fs" />
     <Compile Include="tests/Response.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
