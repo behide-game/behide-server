@@ -19,6 +19,17 @@
       "name": ".NET Core Attach",
       "type": "coreclr",
       "request": "attach"
+    },
+    {
+      "name": "Tests",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build: solution",
+      "program": "${workspaceFolder}/tests/bin/Debug/net7.0/BehideServer.Tests.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
     }
   ]
 }
