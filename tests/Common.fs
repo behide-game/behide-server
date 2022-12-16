@@ -16,6 +16,8 @@ module Response =
         | true -> response
         | false -> failtestf "Response header should be %A but instead it's %A." expectedHeader response.Header
 
+    let content (response: Response) = response.Content
+
 
 type TestTcpClient() =
     let tcp = new SimpleTcpClient(Common.getLocalEP 28000)
@@ -39,6 +41,6 @@ type TestTcpClient() =
 
         this.AwaitResponse()
         |> Async.map (Response.expectHeader ResponseHeader.PlayerRegistered)
-        |> Async.map (fun response -> response.Content)
+        |> Async.map Response.content
         |> Async.map PlayerId.TryParseBytes
         |> Async.map (Expect.wantSome "PlayerId should be parsable.")

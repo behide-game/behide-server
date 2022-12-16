@@ -41,4 +41,31 @@ let tests =
                 |> Async.map (Response.expectHeader ResponseHeader.RoomCreated)
                 |> Async.Ignore
         }
+
+        testAsync "Delete room" {
+            let tcp = TestTcpClient()
+            let! playerId = tcp.RegisterPlayer()
+
+            // create room
+            (playerId, Id.NewGuid())
+            |> Msg.CreateRoom
+            |> tcp.SendMessage
+
+            let! roomId =
+                tcp.AwaitResponse()
+                |> Async.map (Response.expectHeader ResponseHeader.RoomCreated)
+                |> Async.map Response.content
+                |> Async.map RoomId.TryParseBytes
+                |> Async.map (Expect.wantSome "RoomId should be parsable.")
+
+            // delete room
+            roomId
+            |> Msg.DeleteRoom
+            |> tcp.SendMessage
+
+            do!
+                tcp.AwaitResponse()
+                |> Async.map (Response.expectHeader ResponseHeader.RoomDeleted)
+                |> Async.Ignore
+        }
     ]
