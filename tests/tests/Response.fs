@@ -56,7 +56,7 @@ let tests =
                 |> Async.map (Response.expectHeader ResponseHeader.RoomCreated)
                 |> Async.map Response.content
                 |> Async.map RoomId.TryParseBytes
-                |> Async.map (Expect.wantSome "RoomId should be parsable.")
+                |> Async.map (Expect.wantSome "RoomId should be parsable")
 
             // delete room
             roomId
