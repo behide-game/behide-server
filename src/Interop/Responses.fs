@@ -24,7 +24,7 @@ type Response =
 
     member this.ToBytes() = this |> Response.ToBytes
 
-    static member TryParse'(bytes: #seq<byte>) : Response option =
+    static member TryParse(bytes: byte []) : Response option =
         let header = bytes |> Seq.head
         let content = bytes |> Seq.tail |> Seq.toArray
 
@@ -46,8 +46,8 @@ type Response =
         | ResponseHeader.RoomCreated, content when content.Length = 4 -> createResponse header content
         | _ -> None
 
-    static member TryParse(bytes: #seq<byte>, out: Response outref) : bool =
-        let parsedResponseOpt = bytes |> Response.TryParse'
+    static member TryParse(bytes: byte [], out: Response outref) : bool =
+        let parsedResponseOpt = bytes |> Response.TryParse
 
         match parsedResponseOpt with
         | Some x ->

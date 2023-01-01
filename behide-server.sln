@@ -3,11 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Interop", "src\Interop\BehideServer.Interop.fsproj", "{195F64FE-CDC5-4B89-A595-81A7A290C403}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{19D550FD-5B06-4E5D-81CF-59217BA3D7EB}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer", "src\BehideServer.fsproj", "{5827CC7A-0E74-43B3-B394-592AA80432FB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Interop", "src\Interop\BehideServer.Interop.fsproj", "{195F64FE-CDC5-4B89-A595-81A7A290C403}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Tests", "tests\BehideServer.Tests.fsproj", "{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Src", "src\BehideServer.fsproj", "{5827CC7A-0E74-43B3-B394-592AA80432FB}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "tests\BehideServer.Tests.fsproj", "{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

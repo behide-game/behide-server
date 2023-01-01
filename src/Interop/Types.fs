@@ -89,9 +89,7 @@ type RoomId =
                 |> Some
 
     static member TryParseBytes(bytes: byte [], out: RoomId outref) =
-        let roomIdOpt =
-            bytes
-            |> RoomId.TryParseBytes
+        let roomIdOpt = bytes |> RoomId.TryParseBytes
 
         match roomIdOpt with
         | Some roomId ->

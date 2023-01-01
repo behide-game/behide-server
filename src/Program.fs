@@ -6,7 +6,6 @@ open BehideServer.Helpers
 open BehideServer.Log
 
 open System
-open System.Net
 open SuperSimpleTcp
 
 let listenPort = 28000

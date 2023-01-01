@@ -25,7 +25,8 @@ type TestTcpClient() =
 
     do tcp.Events.DataReceived.Add (fun e ->
         e.Data
-        |> Response.TryParse'
+        |> Seq.toArray
+        |> Response.TryParse
         |> caughtResponses.Add)
     do tcp.Connect()
 
