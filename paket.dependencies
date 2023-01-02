@@ -8,6 +8,5 @@ nuget Serilog 2.12.0
 nuget Serilog.Sinks.Console 4.1.0
 nuget Serilog.Sinks.File 5.0.0
 nuget SuperSimpleTcp 3.0.5
-// nuget TypeShape 10.0.0
 nuget Smoosh 1.0.1-custom
 nuget Smoosh.Shared 1.0.1-custom

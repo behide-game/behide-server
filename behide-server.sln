@@ -8,11 +8,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{19D550
 		paket.dependencies = paket.dependencies
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Interop", "src\Interop\BehideServer.Interop.fsproj", "{195F64FE-CDC5-4B89-A595-81A7A290C403}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Interop", "src\BehideServer\Interop\BehideServer.Interop.fsproj", "{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Src", "src\BehideServer.fsproj", "{5827CC7A-0E74-43B3-B394-592AA80432FB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer", "src\BehideServer\BehideServer.fsproj", "{79C33722-8F30-4E10-81D8-1CC86240B2FE}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "tests\BehideServer.Tests.fsproj", "{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Tests", "src\BehideServer.Tests\BehideServer.Tests.fsproj", "{3E6FEDF8-6B11-4E13-8031-1B151DDC1DEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,17 +23,17 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{195F64FE-CDC5-4B89-A595-81A7A290C403}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{195F64FE-CDC5-4B89-A595-81A7A290C403}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{195F64FE-CDC5-4B89-A595-81A7A290C403}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{195F64FE-CDC5-4B89-A595-81A7A290C403}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5827CC7A-0E74-43B3-B394-592AA80432FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5827CC7A-0E74-43B3-B394-592AA80432FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5827CC7A-0E74-43B3-B394-592AA80432FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5827CC7A-0E74-43B3-B394-592AA80432FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4CC40887-4EE6-4BB1-A066-A3E6AF8969DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79C33722-8F30-4E10-81D8-1CC86240B2FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79C33722-8F30-4E10-81D8-1CC86240B2FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79C33722-8F30-4E10-81D8-1CC86240B2FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79C33722-8F30-4E10-81D8-1CC86240B2FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E6FEDF8-6B11-4E13-8031-1B151DDC1DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E6FEDF8-6B11-4E13-8031-1B151DDC1DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E6FEDF8-6B11-4E13-8031-1B151DDC1DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E6FEDF8-6B11-4E13-8031-1B151DDC1DEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
