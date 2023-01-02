@@ -6,7 +6,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/BehideServer.fsproj" />
+    <ProjectReference Include="../BehideServer/BehideServer.fsproj" />
     <Compile Include="Common.fs" />
     <Compile Include="tests/Parsing.fs" />
     <Compile Include="tests/Response.fs" />

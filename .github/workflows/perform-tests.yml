@@ -22,7 +22,7 @@ jobs:
       run: dotnet build --no-restore
 
     - name: Perform tests
-      run: dotnet run --no-build --project ./tests/BehideServer.Tests.fsproj --fail-on-focused-tests
+      run: dotnet run --no-build --project ./src/BehideServer.Tests/BehideServer.Tests.fsproj --fail-on-focused-tests
 
     - name: Test Summary
       uses: test-summary/action@v2
