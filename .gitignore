@@ -453,3 +453,4 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 
 TestResults.xml
+!src/Libs/*.nupkg
