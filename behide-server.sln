@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{19D550
 		paket.dependencies = paket.dependencies
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Interop", "src\BehideServer\Interop\BehideServer.Interop.fsproj", "{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer.Interop", "src\BehideServer.Interop\BehideServer.Interop.fsproj", "{8C702A74-A4AE-4AD8-92CD-18A079A29EE3}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BehideServer", "src\BehideServer\BehideServer.fsproj", "{79C33722-8F30-4E10-81D8-1CC86240B2FE}"
 EndProject

@@ -46,7 +46,7 @@ let main _ =
 #if DEBUG
     // Setup the debug log system
     while true do
-        Console.Read |> ignore
+        Console.Read() |> ignore
 
         if not State.state.Players.IsEmpty || not State.state.Rooms.IsEmpty then
             Log.debug "[STATE] -> Players: %i; Rooms: %i" State.state.Players.Count State.state.Rooms.Count
