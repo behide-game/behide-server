@@ -61,12 +61,17 @@ let tests =
             [ "Ping", { Response.Header = ResponseHeader.Ping; Response.Content = Array.empty }
               "BadServerVersion", { Response.Header = ResponseHeader.BadServerVersion; Response.Content = Array.empty }
               "FailedToParseMsg", { Response.Header = ResponseHeader.FailedToParseMsg; Response.Content = Array.empty }
-              "PlayerNotRegistered", { Response.Header = ResponseHeader.PlayerNotRegistered; Response.Content = Array.empty }
+
               "PlayerRegistered", { Response.Header = ResponseHeader.PlayerRegistered; Response.Content = Id.CreateOf PlayerId |> PlayerId.ToBytes }
+              "PlayerNotRegistered", { Response.Header = ResponseHeader.PlayerNotRegistered; Response.Content = Array.empty }
+
               "RoomCreated", { Response.Header = ResponseHeader.RoomCreated; Response.Content = RoomId.Create() |> RoomId.ToBytes }
-              "RoomDeleted", { Response.Header = ResponseHeader.RoomDeleted; Response.Content = Array.empty }
               "RoomNotCreated", { Response.Header = ResponseHeader.RoomNotCreated; Response.Content = Array.empty }
-              "RoomNotDeleted", { Response.Header = ResponseHeader.RoomNotDeleted; Response.Content = Array.empty } ]
+              "RoomDeleted", { Response.Header = ResponseHeader.RoomDeleted; Response.Content = Array.empty }
+              "RoomNotDeleted", { Response.Header = ResponseHeader.RoomNotDeleted; Response.Content = Array.empty }
+
+              "RoomFound", { Response.Header = ResponseHeader.RoomFound; Response.Content = Id.NewGuid() |> Id.ToBytes }
+              "RoomNotFound", { Response.Header = ResponseHeader.RoomNotFound; Response.Content = Array.empty } ]
             |> testFixture (fun source _ ->
                 let parsed =
                     source
@@ -120,6 +125,27 @@ let tests =
 
                 Expect.equal source parsed "Responses should equal"
                 Expect.equal sourceRoomId parsedRoomId "Response contents should equal"
+            )
+
+            testCase "RoomFound" (fun _ ->
+                let sourceEpicId = Id.NewGuid()
+                let source: Response =
+                    { Header = ResponseHeader.RoomFound
+                      Content = sourceEpicId |> Id.ToBytes }
+
+                let parsed =
+                    source
+                    |> Response.ToBytes
+                    |> Response.TryParse
+                    |> Expect.wantSome "Response should be parsable"
+
+                let parsedId =
+                    parsed.Content
+                    |> Id.TryParseBytes
+                    |> Expect.wantSome "Response content should be parsable"
+
+                Expect.equal source parsed "Responses should equal"
+                Expect.equal sourceEpicId parsedId "Response contents should equal"
             )
         ]
     ]

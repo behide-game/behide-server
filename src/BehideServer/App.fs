@@ -4,6 +4,7 @@ open BehideServer.Types
 open BehideServer.Helpers
 open BehideServer.Log
 open SuperSimpleTcp
+open FsToolkit.ErrorHandling
 
 let sendResponse (tcp: SimpleTcpServer) ipPort (response: byte []) =
     tcp.SendAsync(ipPort, response)
@@ -29,6 +30,7 @@ let proceedMsg ipPort msg =
             |> function
                 | true -> PlayerRegistered player.Id
                 | false -> PlayerNotRegistered
+
     | Msg.CreateRoom (playerId, epicId) ->
         match State.Players.tryGet playerId with
         | None -> RoomNotCreated
@@ -46,16 +48,23 @@ let proceedMsg ipPort msg =
                 | true -> RoomCreated room.Id
                 | false -> RoomNotCreated
     | Msg.DeleteRoom roomId ->
-        let playerIdOpt = State.Players.tryGetFromIpPort ipPort
-        let roomOpt = State.Rooms.tryGet roomId
+        option {
+            let! _playerId = State.Players.tryGetFromIpPort ipPort
+            let! room = State.Rooms.tryGet roomId
+            do! room.Id |> State.Rooms.tryRemove
 
-        match playerIdOpt.IsSome && roomOpt.IsSome with
-        | true ->
-            roomId
-            |> State.state.Rooms.TryRemove
-            |> function
-                | true, _ -> RoomDeleted
-                | false, _ -> RoomNotDeleted
-        | _ -> RoomNotDeleted
+            return RoomDeleted
+        }
+        |> Option.defaultValue RoomNotDeleted
+
+    | Msg.GetRoom roomId ->
+        option {
+            let! _playerId = State.Players.tryGetFromIpPort ipPort
+            let! room = State.Rooms.tryGet roomId
+
+            return room.EpicId
+        }
+        |> Option.map RoomFound
+        |> Option.defaultValue RoomNotFound
 
     |> tap (Log.debug "%A")

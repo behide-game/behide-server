@@ -11,6 +11,8 @@ type Msg =
     | CreateRoom of PlayerId * Id
     /// Send the RoomId
     | DeleteRoom of RoomId
+    /// Send the RoomId
+    | GetRoom of RoomId
 
     static member private encoder = Encoder.mkEncoder<Msg>()
     static member private decoder = Decoder.mkDecoder<Msg>()

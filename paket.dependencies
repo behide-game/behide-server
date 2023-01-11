@@ -10,3 +10,4 @@ nuget Serilog.Sinks.File 5.0.0
 nuget SuperSimpleTcp 3.0.5
 nuget Smoosh 1.0.1-custom
 nuget Smoosh.Shared 1.0.1-custom
+nuget FsToolkit.ErrorHandling

@@ -19,6 +19,13 @@ module Id =
 
     let ToBytes (id: Id) = id.ToByteArray()
 
+module System =
+    type Guid with
+        static member TryParseBytes (bytes: byte [], out: Guid outref) : bool =
+            match bytes |> Id.TryParseBytes with
+            | Some id -> out <- id; true
+            | None -> false
+
 type PlayerId =
     | PlayerId of Id
     static member ToBytes (PlayerId playerId) = playerId |> Id.ToBytes
@@ -69,6 +76,22 @@ type RoomId =
         |> String
         |> RoomId
 
+    override this.ToString() = this |> function RoomId rawRoomId -> rawRoomId.ToUpper()
+
+    static member TryParse(str: string) =
+        let str = str.ToUpper()
+
+        str
+        |> Seq.forall (fun char -> Array.contains char RoomId.possibilities)
+        |> function
+            | true -> Some (RoomId str)
+            | false -> None
+
+    static member TryParse(str: string, out: RoomId outref) =
+        match str |> RoomId.TryParse with
+        | Some roomId -> out <- roomId; true
+        | None -> false
+
     static member ToBytes(RoomId id) =
         id.ToCharArray()
         |> Array.map (fun char -> Array.findIndex ((=) char) RoomId.possibilities)
@@ -89,12 +112,8 @@ type RoomId =
                 |> Some
 
     static member TryParseBytes(bytes: byte [], out: RoomId outref) =
-        let roomIdOpt = bytes |> RoomId.TryParseBytes
-
-        match roomIdOpt with
-        | Some roomId ->
-            out <- roomId
-            true
+        match bytes |> RoomId.TryParseBytes with
+        | Some roomId -> out <- roomId; true
         | None -> false
 
 type Room =

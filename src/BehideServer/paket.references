@@ -3,3 +3,4 @@ Serilog.Sinks.Console
 Serilog.Sinks.File
 SuperSimpleTcp
 FSharp.Core
+FsToolkit.ErrorHandling

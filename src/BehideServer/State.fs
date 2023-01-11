@@ -38,8 +38,16 @@ module Players =
         |> Seq.tryFind (fun player -> player.IpPort = ipPort)
 
 module Rooms =
-    let tryGet roomId =
-        state.Rooms.TryGetValue roomId
+    let tryGet (roomId: RoomId) =
+        roomId
+        |> state.Rooms.TryGetValue
         |> function
             | true, x -> Some x
+            | false, _ -> None
+
+    let tryRemove (roomId: RoomId) =
+        roomId
+        |> state.Rooms.TryRemove
+        |> function
+            | true, _ -> Some ()
             | false, _ -> None
