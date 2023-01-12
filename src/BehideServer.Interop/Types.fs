@@ -19,12 +19,11 @@ module Id =
 
     let ToBytes (id: Id) = id.ToByteArray()
 
-module System =
-    type Guid with
-        static member TryParseBytes (bytes: byte [], out: Guid outref) : bool =
-            match bytes |> Id.TryParseBytes with
-            | Some id -> out <- id; true
-            | None -> false
+type GuidHelper =
+    static member TryParseBytes (bytes: byte [], out: Guid outref) : bool =
+        match bytes |> Id.TryParseBytes with
+        | Some id -> out <- id; true
+        | None -> false
 
 type PlayerId =
     | PlayerId of Id
