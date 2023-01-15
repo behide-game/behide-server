@@ -13,6 +13,7 @@ let sendResponse (tcp: SimpleTcpServer) ipPort (response: byte []) =
 
 let proceedMsg ipPort msg =
     match msg with
+    | Msg.FailedToParse -> FailedToParseMsg
     | Msg.Ping -> Ping
     | Msg.RegisterPlayer (clientVersion, username) ->
         match clientVersion <> Version.GetVersion() with

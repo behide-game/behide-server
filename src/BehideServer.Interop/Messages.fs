@@ -4,6 +4,8 @@ open Smoosh
 
 [<RequireQualifiedAccess>]
 type Msg =
+    | FailedToParse
+
     | Ping
     /// Send the server version (string) and the player's username (string)
     | RegisterPlayer of string * string
@@ -21,9 +23,8 @@ type Msg =
     member this.ToBytes() = this |> Msg.ToBytes
 
     static member TryParse(bytes: #seq<byte>) =
-        try
-            Some (Msg.decoder (bytes |> Seq.toArray))
-        with
-        | e ->
-            printfn "Failed to decode msg: %A" e
-            None
+        try Msg.decoder (bytes |> Seq.toArray) |> Some
+        with | _ -> None
+        |> function
+            | Some FailedToParse | None -> None
+            | msgOpt -> msgOpt

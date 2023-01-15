@@ -4,47 +4,51 @@ open Expecto
 open BehideServer.Tests.Common
 open BehideServer.Types
 
+let parseTest name (source: 'a) (toBytes: 'a -> byte []) (parser: byte [] -> 'a option) =
+    testCase name (fun _ ->
+        source
+        |> toBytes
+        |> parser
+        |> Expect.wantSome "Should be parsable"
+        |> fun parsed -> Expect.equal source parsed "Source value and parsed value should equals"
+    )
+
+let parseResponseWithContentTest responseHeader content contentToBytes contentParser =
+    testCase (responseHeader |> string) (fun _ ->
+        let response: Response =
+            { Header = responseHeader
+              Content = content |> contentToBytes }
+
+        let parsedResponse =
+            response
+            |> Response.ToBytes
+            |> Response.TryParse
+            |> Expect.wantSome "Response should be parsable"
+
+        let parsedContent =
+            parsedResponse.Content
+            |> contentParser
+            |> Expect.wantSome "Response content should be parsable"
+
+        Expect.equal response parsedResponse "Responses should equal"
+        Expect.equal content parsedContent "Response contents should equal"
+    )
+
+
 [<Tests>]
 let tests =
     testList "Parsing" [
-        testCase "Id (Guid)" (fun _ ->
-            let sourceId = Id.NewGuid()
-            let parsedId =
-                sourceId
-                |> Id.ToBytes
-                |> Id.TryParseBytes
-                |> Expect.wantSome "Id should be parsable"
-
-            Expect.equal parsedId parsedId "Ids should equal"
-        )
-
-        testCase "RoomId" (fun _ ->
-            let sourceRoomId = RoomId.Create()
-            let parsedRoomId =
-                sourceRoomId
-                |> RoomId.ToBytes
-                |> RoomId.TryParseBytes
-                |> Expect.wantSome "RoomId should be parsable"
-
-            Expect.equal sourceRoomId parsedRoomId "RoomIds should equal"
-        )
-
-        testCase "PlayerId" (fun _ ->
-            let source = Id.CreateOf PlayerId
-            let parsed =
-                source
-                |> PlayerId.ToBytes
-                |> PlayerId.TryParseBytes
-                |> Expect.wantSome "PlayerId should be parsable"
-
-            Expect.equal source parsed "PlayerIds should equal"
-        )
+        parseTest "Guid" (Id.NewGuid()) Id.ToBytes Id.TryParseBytes
+        parseTest "RoomId" (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
+        parseTest "PlayerId" (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
+        testCase "Msg.FailedToParse" (fun _ -> Expect.isNone ([||] |> Msg.TryParse) "Parsing an unexpected msg should return None")
 
         testList "Msg" (
             [ "Ping", Msg.Ping
               "RegisterPlayer", Msg.RegisterPlayer ("fake-version", utf8String)
               "CreateRoom", Msg.CreateRoom (Id.CreateOf PlayerId, Id.NewGuid())
-              "DeleteRoom", Msg.DeleteRoom (RoomId.Create()) ]
+              "DeleteRoom", Msg.DeleteRoom (RoomId.Create())
+              "GetRoom", Msg.GetRoom (RoomId.Create()) ]
             |> testFixture (fun source _ ->
                 let parsed =
                     source
@@ -72,80 +76,21 @@ let tests =
 
               "RoomFound", { Response.Header = ResponseHeader.RoomFound; Response.Content = Id.NewGuid() |> Id.ToBytes }
               "RoomNotFound", { Response.Header = ResponseHeader.RoomNotFound; Response.Content = Array.empty } ]
-            |> testFixture (fun source _ ->
+            |> testFixture (fun response _ ->
                 let parsed =
-                    source
+                    response
                     |> Response.ToBytes
                     |> Response.TryParse
                     |> Expect.wantSome "Response should be parsable"
 
-                Expect.equal source parsed "Responses should equal"
+                Expect.equal response parsed "Responses should equal"
             )
             |> Seq.toList
         )
 
         testList "Response with content" [
-            testCase "PlayerRegistered" (fun _ ->
-                let playerId = Id.CreateOf PlayerId
-                let source: Response =
-                    { Header = ResponseHeader.PlayerRegistered
-                      Content = playerId |> PlayerId.ToBytes }
-
-                let parsed =
-                    source
-                    |> Response.ToBytes
-                    |> Response.TryParse
-                    |> Expect.wantSome "Response should be parsable"
-
-                let parsedPlayerId =
-                    parsed.Content
-                    |> PlayerId.TryParseBytes
-                    |> Expect.wantSome "Response content should be parsable"
-
-                Expect.equal source parsed "Responses should equal"
-                Expect.equal playerId parsedPlayerId "Response contents should equal"
-            )
-
-            testCase "RoomCreated" (fun _ ->
-                let sourceRoomId = RoomId.Create()
-                let source: Response =
-                    { Header = ResponseHeader.RoomCreated
-                      Content = sourceRoomId |> RoomId.ToBytes }
-
-                let parsed =
-                    source
-                    |> Response.ToBytes
-                    |> Response.TryParse
-                    |> Expect.wantSome "Response should be parsable"
-
-                let parsedRoomId =
-                    parsed.Content
-                    |> RoomId.TryParseBytes
-                    |> Expect.wantSome "Response content should be parsable"
-
-                Expect.equal source parsed "Responses should equal"
-                Expect.equal sourceRoomId parsedRoomId "Response contents should equal"
-            )
-
-            testCase "RoomFound" (fun _ ->
-                let sourceEpicId = Id.NewGuid()
-                let source: Response =
-                    { Header = ResponseHeader.RoomFound
-                      Content = sourceEpicId |> Id.ToBytes }
-
-                let parsed =
-                    source
-                    |> Response.ToBytes
-                    |> Response.TryParse
-                    |> Expect.wantSome "Response should be parsable"
-
-                let parsedId =
-                    parsed.Content
-                    |> Id.TryParseBytes
-                    |> Expect.wantSome "Response content should be parsable"
-
-                Expect.equal source parsed "Responses should equal"
-                Expect.equal sourceEpicId parsedId "Response contents should equal"
-            )
+            parseResponseWithContentTest ResponseHeader.PlayerRegistered (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
+            parseResponseWithContentTest ResponseHeader.RoomCreated (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
+            parseResponseWithContentTest ResponseHeader.RoomFound (Id.NewGuid()) Id.ToBytes Id.TryParseBytes
         ]
     ]
