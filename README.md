@@ -1,4 +1,4 @@
-# ⚡ Behide server • [![github actions status badge](https://github.com/behide-game/behide-server/actions/workflows/perform-tests.yml/badge.svg)](https://github.com/behide-game/behide-server/actions/workflows/perform-tests.yml)
+# ⚡ Behide server • [![github actions status badge](https://github.com/behide-game/behide-server/actions/workflows/test-publish.yml/badge.svg)](https://github.com/behide-game/behide-server/actions/workflows/test-publish.yml)
 
 A server in [F#](https://fsharp.org/) that manages players for the game [Behide](https://gitlab.com/carne-8/behide).
 

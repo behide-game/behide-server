@@ -1,0 +1,59 @@
+name: Tests / Publish
+
+on: push
+
+jobs:
+  perform-tests:
+    name: ⚗️ Perform tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+
+    - run: dotnet tool restore
+    - run: dotnet paket restore
+    - run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Perform tests
+      run: dotnet run --no-build --project ./src/BehideServer.Tests/BehideServer.Tests.fsproj --fail-on-focused-tests
+
+    - name: Test Summary
+      uses: test-summary/action@v2
+      with:
+        paths: "TestResults.xml"
+      if: always()
+
+  build-push-image:
+    name: ⚡ Build and Push image
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: perform-tests
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Process version of the tag
+        id: v
+        uses: ncipollo/semantic-version-action@v1
+
+      - name: Log in to ghcr
+        uses: docker/login-action@v2
+        with:
+          registry: "ghcr.io"
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ format('ghcr.io/behide-game/behide-server:{0}.{1}.{2}', steps.v.outputs.major, steps.v.outputs.minor, steps.v.outputs.patch) }}
