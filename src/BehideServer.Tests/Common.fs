@@ -16,8 +16,10 @@ module Response =
         | true -> response
         | false -> failtestf "Response header should be %A but instead it's %A" expectedHeader response.Header
 
-    let content (response: Response) = response.Content
-
+    let parseContent parser (response: Response) =
+        response.Content
+        |> parser
+        |> Expect.wantSome "Response content should be parsable"
 
 type TestTcpClient() =
     let tcp = new SimpleTcpClient(Common.getLocalEP 28000)
@@ -30,20 +32,23 @@ type TestTcpClient() =
         |> caughtResponses.Add)
     do tcp.Connect()
 
-    member _.SendMessage msg = msg |> Msg.ToBytes |> tcp.Send
-    member _.AwaitResponse() =
+    member _.SendMessage expectedHeader msg =
+        msg |> Msg.ToBytes |> tcp.Send
+
         caughtResponses.AsyncGet()
         |> Async.map (Expect.wantSome "Response should be parsable")
+        |> Async.map (Response.expectHeader expectedHeader)
 
     member this.RegisterPlayer() =
         (Version.GetVersion(), "test user")
         |> Msg.RegisterPlayer
-        |> this.SendMessage
+        |> this.SendMessage ResponseHeader.PlayerRegistered
+        |> Async.map (Response.parseContent PlayerId.TryParseBytes)
 
-        this.AwaitResponse()
-        |> Async.map (Response.expectHeader ResponseHeader.PlayerRegistered)
-        |> Async.map Response.content
-        |> Async.map PlayerId.TryParseBytes
-        |> Async.map (Expect.wantSome "PlayerId should be parsable")
+    member this.CreateRoom playerId =
+        (playerId, Id.NewGuid())
+        |> Msg.CreateRoom
+        |> this.SendMessage ResponseHeader.RoomCreated
+        |> Async.map (Response.parseContent RoomId.TryParseBytes)
 
 let utf8String = System.IO.File.ReadAllText (__SOURCE_DIRECTORY__ + "/UTF8-text.txt")
