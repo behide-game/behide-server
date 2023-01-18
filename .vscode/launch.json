@@ -9,11 +9,12 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build: solution",
-      "program": "${workspaceFolder}/src/bin/Debug/net7.0/BehideServer.dll",
+      "program": "${workspaceFolder}/src/BehideServer/bin/Debug/net7.0/BehideServer.dll",
       "args": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "name": ".NET Core Attach",
@@ -25,11 +26,12 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build: solution",
-      "program": "${workspaceFolder}/tests/bin/Debug/net7.0/BehideServer.Tests.dll",
+      "program": "${workspaceFolder}/src/BehideServer.Tests/bin/Debug/net7.0/win-x64/BehideServer.Tests.dll",
       "args": [],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

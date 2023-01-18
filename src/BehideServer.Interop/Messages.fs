@@ -14,7 +14,8 @@ type Msg =
     /// Send the RoomId
     | DeleteRoom of RoomId
     /// Send the RoomId
-    | GetRoom of RoomId
+    | JoinRoom of RoomId
+    | LeaveRoom
 
     static member private encoder = Encoder.mkEncoder<Msg>()
     static member private decoder = Decoder.mkDecoder<Msg>()

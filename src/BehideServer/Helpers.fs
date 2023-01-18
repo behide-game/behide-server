@@ -9,24 +9,27 @@ type Response with
 type ResponseBuilder =
     internal
     | Ping
+    | BadServerVersion
+    | FailedToParseMsg
 
     | PlayerRegistered of PlayerId
     | PlayerNotRegistered
 
     | RoomCreated of RoomId
-    | RoomNotCreated
     | RoomDeleted
+    | RoomNotCreated
     | RoomNotDeleted
 
-    | RoomFound of Id
-    | RoomNotFound
-
-    | BadServerVersion
-    | FailedToParseMsg
+    | RoomJoined of Room
+    | RoomLeaved
+    | RoomNotJoined
+    | RoomNotLeaved
 
     static member internal ToResponse responseBuilder =
         match responseBuilder with
         | Ping -> Response.createNoContent ResponseHeader.Ping
+        | BadServerVersion -> Response.createNoContent ResponseHeader.BadServerVersion
+        | FailedToParseMsg -> Response.createNoContent ResponseHeader.FailedToParseMsg
 
         | PlayerRegistered content -> Response.create ResponseHeader.PlayerRegistered (content |> PlayerId.ToBytes)
         | PlayerNotRegistered -> Response.createNoContent ResponseHeader.PlayerNotRegistered
@@ -36,10 +39,9 @@ type ResponseBuilder =
         | RoomNotCreated -> Response.createNoContent ResponseHeader.RoomNotCreated
         | RoomNotDeleted -> Response.createNoContent ResponseHeader.RoomNotDeleted
 
-        | RoomFound epicId -> Response.create ResponseHeader.RoomFound (epicId |> Id.ToBytes)
-        | RoomNotFound -> Response.createNoContent ResponseHeader.RoomNotFound
-
-        | BadServerVersion -> Response.createNoContent ResponseHeader.BadServerVersion
-        | FailedToParseMsg -> Response.createNoContent ResponseHeader.FailedToParseMsg
+        | RoomJoined room -> Response.create ResponseHeader.RoomJoined (room |> Room.ToBytes)
+        | RoomLeaved -> Response.createNoContent ResponseHeader.RoomLeaved
+        | RoomNotJoined -> Response.createNoContent ResponseHeader.RoomNotJoined
+        | RoomNotLeaved -> Response.createNoContent ResponseHeader.RoomNotLeaved
 
 let tap f x = x |> f; x

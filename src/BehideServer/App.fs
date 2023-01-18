@@ -16,21 +16,24 @@ let proceedMsg ipPort msg =
     | Msg.FailedToParse -> FailedToParseMsg
     | Msg.Ping -> Ping
     | Msg.RegisterPlayer (clientVersion, username) ->
-        match clientVersion <> Version.GetVersion() with
-        | true -> BadServerVersion
-        | false when username.Length < 1 -> PlayerNotRegistered
-        | false ->
-            let player =
-                { Id = Id.CreateOf PlayerId
-                  IpPort = ipPort
-                  Username = username }
+        option {
+            let playerExist = State.Players.tryGetFromIpPort ipPort |> Option.isSome
 
-            player
-            |> State.Msg.RegisterPlayer
-            |> State.updateState
-            |> function
-                | true -> PlayerRegistered player.Id
-                | false -> PlayerNotRegistered
+            match clientVersion <> Version.GetVersion() with
+            | true -> return BadServerVersion
+            | false when username.Length < 1 || playerExist -> return PlayerNotRegistered
+            | false ->
+                let player =
+                    { Id = Id.CreateOf PlayerId
+                      IpPort = ipPort
+                      Username = username
+                      CurrentRoomId = None }
+
+                return! player
+                        |> State.Players.tryAdd
+                        |> Option.map (fun _ -> PlayerRegistered player.Id)
+        }
+        |> Option.defaultValue PlayerNotRegistered
 
     | Msg.CreateRoom (playerId, epicId) ->
         match State.Players.tryGet playerId with
@@ -39,18 +42,19 @@ let proceedMsg ipPort msg =
             let room =
                 { Id = RoomId.Create()
                   EpicId = epicId
+                  CurrentRound = 0
+                  MaxPlayers = 4
                   Owner = creator.Id
                   Players = [| creator |] }
 
             room
-            |> State.Msg.CreateRoom
-            |> State.updateState
+            |> State.Rooms.tryAdd
             |> function
-                | true -> RoomCreated room.Id
-                | false -> RoomNotCreated
+                | Some () -> RoomCreated room.Id
+                | None -> RoomNotCreated
     | Msg.DeleteRoom roomId ->
         option {
-            let! _playerId = State.Players.tryGetFromIpPort ipPort
+            let! _player = State.Players.tryGetFromIpPort ipPort
             let! room = State.Rooms.tryGet roomId
             do! room.Id |> State.Rooms.tryRemove
 
@@ -58,14 +62,46 @@ let proceedMsg ipPort msg =
         }
         |> Option.defaultValue RoomNotDeleted
 
-    | Msg.GetRoom roomId ->
+    | Msg.JoinRoom roomId ->
         option {
-            let! _playerId = State.Players.tryGetFromIpPort ipPort
+            let! player = State.Players.tryGetFromIpPort ipPort
             let! room = State.Rooms.tryGet roomId
 
-            return room.EpicId
+            // Check if player is already in room
+            let playerAlreadyRegistered = room.Players |> Array.tryFind (fun x -> x.Id = player.Id) |> Option.isSome
+            match player.Id = room.Owner || playerAlreadyRegistered with
+            | true -> do! None
+            | false -> ()
+
+            // Update room
+            let newPlayerList = Array.append [| player |] room.Players
+            let newRoom = { room with Players = newPlayerList }
+            do! State.Rooms.tryUpdate newRoom
+
+            // Update player
+            let newPlayer = { player with CurrentRoomId = Some newRoom.Id }
+            do! State.Players.tryUpdate newPlayer
+
+            return RoomJoined room
         }
-        |> Option.map RoomFound
-        |> Option.defaultValue RoomNotFound
+        |> Option.defaultValue RoomNotJoined
+    | Msg.LeaveRoom ->
+        option {
+            let! player = State.Players.tryGetFromIpPort ipPort
+            let! playerRoomId = player.CurrentRoomId
+            let! room = State.Rooms.tryGet playerRoomId
+
+            // Update room
+            let newPlayerList = room.Players |> Array.filter (fun x -> x.Id <> player.Id)
+            let newRoom = { room with Players = newPlayerList }
+            do! State.Rooms.tryUpdate newRoom
+
+            // Update player
+            let newPlayer = { player with CurrentRoomId = None }
+            do! State.Players.tryUpdate newPlayer
+
+            return RoomLeaved
+        }
+        |> Option.defaultValue RoomNotLeaved
 
     |> tap (Log.debug "%A")

@@ -7,24 +7,13 @@ type State =
     { Rooms: ConcurrentDictionary<RoomId, Room>
       Players: ConcurrentDictionary<PlayerId, Player> }
 
-[<RequireQualifiedAccess>]
-type Msg =
-    | RegisterPlayer of Player
-    | UnregisterPlayer of PlayerId
-    | CreateRoom of Room
-    | RemoveRoom of RoomId
-
 let state =
     { Players = new ConcurrentDictionary<PlayerId, Player>()
       Rooms = new ConcurrentDictionary<RoomId, Room>() }
 
-let updateState (event: Msg) =
-    match event with
-    | Msg.RegisterPlayer player -> state.Players.TryAdd(player.Id, player)
-    | Msg.UnregisterPlayer playerId -> state.Players.TryRemove(playerId, unbox ())
-    | Msg.CreateRoom room -> state.Rooms.TryAdd(room.Id, room)
-    | Msg.RemoveRoom roomId -> state.Rooms.TryRemove(roomId, unbox ())
 
+module private Option =
+    let fromBool b = b |> function | true -> Some () | false -> None
 
 module Players =
     let tryGet playerId =
@@ -36,6 +25,26 @@ module Players =
     let tryGetFromIpPort ipPort =
         state.Players.Values
         |> Seq.tryFind (fun player -> player.IpPort = ipPort)
+
+    let tryRemove (playerId: PlayerId) =
+        playerId
+        |> state.Players.TryRemove
+        |> function
+            | true, _ -> Some ()
+            | false, _ -> None
+
+    let tryUpdate (newPlayer: Player) =
+        newPlayer.Id
+        |> tryGet
+        |> Option.bind (fun previousPlayer ->
+            (newPlayer.Id, newPlayer, previousPlayer)
+            |> state.Players.TryUpdate
+            |> Option.fromBool
+        )
+
+    let tryAdd (player: Player) =
+        state.Players.TryAdd(player.Id, player)
+        |> Option.fromBool
 
 module Rooms =
     let tryGet (roomId: RoomId) =
@@ -51,3 +60,16 @@ module Rooms =
         |> function
             | true, _ -> Some ()
             | false, _ -> None
+
+    let tryUpdate (newRoom: Room) =
+        newRoom.Id
+        |> tryGet
+        |> Option.bind (fun previousRoom ->
+            (newRoom.Id, newRoom, previousRoom)
+            |> state.Rooms.TryUpdate
+            |> Option.fromBool
+        )
+
+    let tryAdd (room: Room) =
+        state.Rooms.TryAdd(room.Id, room)
+        |> Option.fromBool

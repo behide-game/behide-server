@@ -1,6 +1,7 @@
 namespace BehideServer.Types
 
 open System
+open Smoosh
 
 type Id = Guid
 module Id =
@@ -41,12 +42,6 @@ type PlayerId =
             out <- playerId
             true
         | None -> false
-
-type Player =
-    { Id: PlayerId
-      IpPort: string
-      Username: string }
-
 
 type RoomId =
     private
@@ -115,8 +110,31 @@ type RoomId =
         | Some roomId -> out <- roomId; true
         | None -> false
 
+type Player =
+    { Id: PlayerId
+      IpPort: string
+      Username: string
+      CurrentRoomId: RoomId option }
+
 type Room =
     { Id: RoomId
       EpicId: Id
+      CurrentRound: int
+      MaxPlayers: int
       Owner: PlayerId
       Players: Player [] }
+
+    static member private encoder = Encoder.mkEncoder<Room>()
+    static member private decoder = Decoder.mkDecoder<Room>()
+
+    static member ToBytes room = Room.encoder room |> Seq.toArray
+    member this.ToBytes() = Room.ToBytes this
+
+    static member TryParse (bytes: byte []) =
+        try Room.decoder (bytes |> Seq.toArray) |> Some
+        with | _ -> None
+
+    static member TryParse (bytes: byte [], out: Room outref) : bool =
+        match bytes |> Room.TryParse with
+        | Some room -> out <- room; true
+        | None -> false

@@ -16,9 +16,13 @@ type ResponseHeader =
     | RoomDeleted = 6uy
     | RoomNotDeleted = 7uy
 
-    /// Contain EpicId
-    | RoomFound = 8uy
-    | RoomNotFound = 9uy
+    /// Contain Room
+    | RoomJoined = 8uy
+    | RoomNotJoined = 9uy
+
+    /// Contain the player's id who leaved
+    | RoomLeaved = 10uy
+    | RoomNotLeaved = 11uy
 
 [<RequireQualifiedAccess>]
 type Response =
@@ -43,19 +47,19 @@ type Response =
         | ResponseHeader.RoomNotCreated, [||] -> createResponse ResponseHeader.RoomNotCreated [||]
         | ResponseHeader.RoomDeleted, [||] -> createResponse ResponseHeader.RoomDeleted [||]
         | ResponseHeader.RoomNotDeleted, [||] -> createResponse ResponseHeader.RoomNotDeleted [||]
-        | ResponseHeader.RoomNotFound, [||] -> createResponse ResponseHeader.RoomNotFound [||]
+        | ResponseHeader.RoomNotJoined, [||] -> createResponse ResponseHeader.RoomNotJoined [||]
+        | ResponseHeader.RoomNotLeaved, [||] -> createResponse ResponseHeader.RoomNotLeaved [||]
         | ResponseHeader.BadServerVersion, [||] -> createResponse ResponseHeader.BadServerVersion [||]
         | ResponseHeader.FailedToParseMsg, [||] -> createResponse ResponseHeader.FailedToParseMsg [||]
+        | ResponseHeader.RoomJoined, content -> createResponse ResponseHeader.RoomJoined content
         | ResponseHeader.PlayerRegistered, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.PlayerRegistered content
         | ResponseHeader.RoomCreated, content when content.Length = 4 (* The length of a RoomId *) -> createResponse ResponseHeader.RoomCreated content
-        | ResponseHeader.RoomFound, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.RoomFound content
+        | ResponseHeader.RoomLeaved, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.RoomLeaved content
         | _ -> None
 
     static member TryParse(bytes: byte [], out: Response outref) : bool =
         let parsedResponseOpt = bytes |> Response.TryParse
 
         match parsedResponseOpt with
-        | Some x ->
-            out <- x
-            true
+        | Some x -> out <- x; true
         | None -> false
