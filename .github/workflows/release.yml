@@ -59,3 +59,9 @@ jobs:
         with:
           push: true
           tags: ${{ format('ghcr.io/behide-game/behide-server:{0}.{1}.{2}', steps.v.outputs.major, steps.v.outputs.minor, steps.v.outputs.patch) }}
+
+      - name: Build and push (latest)
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ghcr.io/behide-game/behide-server:latest
