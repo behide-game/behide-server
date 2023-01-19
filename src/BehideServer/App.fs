@@ -68,8 +68,8 @@ let proceedMsg ipPort msg =
             let! room = State.Rooms.tryGet roomId
 
             // Check if player is already in room
-            let playerAlreadyRegistered = room.Players |> Array.tryFind (fun x -> x.Id = player.Id) |> Option.isSome
-            match player.Id = room.Owner || playerAlreadyRegistered with
+            let playerAlreadyJoined = room.Players |> Array.tryFind (fun x -> x.Id = player.Id) |> Option.isSome
+            match playerAlreadyJoined with
             | true -> do! None
             | false -> ()
 
@@ -100,7 +100,7 @@ let proceedMsg ipPort msg =
             let newPlayer = { player with CurrentRoomId = None }
             do! State.Players.tryUpdate newPlayer
 
-            return RoomLeaved
+            return RoomLeaved newPlayer.Id
         }
         |> Option.defaultValue RoomNotLeaved
 

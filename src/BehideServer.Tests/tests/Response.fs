@@ -79,6 +79,23 @@ let tests =
                     |> Async.Ignore
             }
 
+            testAsync "Owner try to join" {
+                // Create room
+                let ownerTcp = TestTcpClient()
+                let! ownerId = ownerTcp.RegisterPlayer()
+
+                let! roomId =
+                    (ownerId, Id.NewGuid())
+                    |> Msg.CreateRoom
+                    |> ownerTcp.SendMessage ResponseHeader.RoomCreated
+                    |> Async.map (Response.parseContent RoomId.TryParseBytes)
+
+                do! roomId
+                    |> Msg.JoinRoom
+                    |> ownerTcp.SendMessage ResponseHeader.RoomNotJoined
+                    |> Async.Ignore
+            }
+
             testAsync "Unregistered player" {
                 // Create room
                 let ownerTcp = TestTcpClient()
@@ -136,6 +153,58 @@ let tests =
                 do! roomId
                     |> Msg.JoinRoom
                     |> playerTcp.SendMessage ResponseHeader.RoomNotJoined
+                    |> Async.Ignore
+            }
+        ]
+
+        testList "Leave room" [
+            testAsync "Leave room" {
+                // Create room
+                let ownerTcp = TestTcpClient()
+                let! ownerId = ownerTcp.RegisterPlayer()
+
+                let! roomId =
+                    (ownerId, Id.NewGuid())
+                    |> Msg.CreateRoom
+                    |> ownerTcp.SendMessage ResponseHeader.RoomCreated
+                    |> Async.map (Response.parseContent RoomId.TryParseBytes)
+
+                // Join room
+                let playerTcp = TestTcpClient()
+                let! playerId = playerTcp.RegisterPlayer()
+
+                do! roomId
+                    |> Msg.JoinRoom
+                    |> playerTcp.SendMessage ResponseHeader.RoomJoined
+                    |> Async.map (Response.parseContent Room.TryParse)
+                    |> Async.Ignore
+
+                // Leave room
+                let! leavedPlayerId =
+                    Msg.LeaveRoom
+                    |> playerTcp.SendMessage ResponseHeader.RoomLeaved
+                    |> Async.map (Response.parseContent PlayerId.TryParseBytes)
+
+                Expect.equal playerId leavedPlayerId "PlayerIds should equal"
+            }
+
+            testAsync "Player didn't join" {
+                // Create room
+                let ownerTcp = TestTcpClient()
+                let! ownerId = ownerTcp.RegisterPlayer()
+
+                let! _roomId =
+                    (ownerId, Id.NewGuid())
+                    |> Msg.CreateRoom
+                    |> ownerTcp.SendMessage ResponseHeader.RoomCreated
+                    |> Async.map (Response.parseContent RoomId.TryParseBytes)
+
+                // Leave room
+                let playerTcp = TestTcpClient()
+                let! _playerId = playerTcp.RegisterPlayer()
+
+                do! Msg.LeaveRoom
+                    |> playerTcp.SendMessage ResponseHeader.RoomNotLeaved
                     |> Async.Ignore
             }
         ]
