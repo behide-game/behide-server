@@ -104,5 +104,6 @@ let tests =
             parseResponseWithContentTest ResponseHeader.PlayerRegistered (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
             parseResponseWithContentTest ResponseHeader.RoomCreated (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
             parseResponseWithContentTest ResponseHeader.RoomJoined fakeRoom Room.ToBytes Room.TryParse
+            parseResponseWithContentTest ResponseHeader.RoomLeaved (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
         ]
     ]
