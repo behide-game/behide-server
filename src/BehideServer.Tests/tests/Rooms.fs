@@ -119,21 +119,17 @@ let tests =
 
                 // Join room
                 let playerTcp = TestTcpClient()
-                let! playerId = playerTcp.RegisterPlayer()
+                let! _playerId = playerTcp.RegisterPlayer()
 
                 do! roomId
                     |> Msg.JoinRoom
                     |> playerTcp.SendMessage ResponseHeader.RoomJoined
-                    |> Async.map (Response.parseContent Room.TryParse)
                     |> Async.Ignore
 
                 // Leave room
-                let! leavedPlayerId =
-                    Msg.LeaveRoom
+                do! Msg.LeaveRoom
                     |> playerTcp.SendMessage ResponseHeader.RoomLeaved
-                    |> Async.map (Response.parseContent PlayerId.TryParseBytes)
-
-                Expect.equal playerId leavedPlayerId "PlayerIds should equal"
+                    |> Async.Ignore
             }
 
             testAsync "Player didn't join" {

@@ -21,7 +21,7 @@ type ResponseBuilder =
     | RoomNotDeleted
 
     | RoomJoined of Room
-    | RoomLeaved of PlayerId
+    | RoomLeaved
     | RoomNotJoined
     | RoomNotLeaved
 
@@ -40,7 +40,7 @@ type ResponseBuilder =
         | RoomNotDeleted -> Response.createNoContent ResponseHeader.RoomNotDeleted
 
         | RoomJoined room -> Response.create ResponseHeader.RoomJoined (room |> Room.ToBytes)
-        | RoomLeaved playerId -> Response.create ResponseHeader.RoomLeaved (playerId |> PlayerId.ToBytes)
+        | RoomLeaved -> Response.createNoContent ResponseHeader.RoomLeaved
         | RoomNotJoined -> Response.createNoContent ResponseHeader.RoomNotJoined
         | RoomNotLeaved -> Response.createNoContent ResponseHeader.RoomNotLeaved
 

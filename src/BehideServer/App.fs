@@ -100,7 +100,7 @@ let proceedMsg ipPort msg =
             let newPlayer = { player with CurrentRoomId = None }
             do! State.Players.tryUpdate newPlayer
 
-            return RoomLeaved newPlayer.Id
+            return RoomLeaved
         }
         |> Option.defaultValue RoomNotLeaved
 

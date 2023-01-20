@@ -20,7 +20,6 @@ type ResponseHeader =
     | RoomJoined = 8uy
     | RoomNotJoined = 9uy
 
-    /// Contain the player's id who leaved
     | RoomLeaved = 10uy
     | RoomNotLeaved = 11uy
 
@@ -44,8 +43,9 @@ type Response =
         match header |> LanguagePrimitives.EnumOfValue, content with
         | ResponseHeader.Ping, [||] -> createResponse ResponseHeader.Ping [||]
         | ResponseHeader.PlayerNotRegistered, [||] -> createResponse ResponseHeader.PlayerNotRegistered [||]
-        | ResponseHeader.RoomNotCreated, [||] -> createResponse ResponseHeader.RoomNotCreated [||]
         | ResponseHeader.RoomDeleted, [||] -> createResponse ResponseHeader.RoomDeleted [||]
+        | ResponseHeader.RoomLeaved, [||] -> createResponse ResponseHeader.RoomLeaved [||]
+        | ResponseHeader.RoomNotCreated, [||] -> createResponse ResponseHeader.RoomNotCreated [||]
         | ResponseHeader.RoomNotDeleted, [||] -> createResponse ResponseHeader.RoomNotDeleted [||]
         | ResponseHeader.RoomNotJoined, [||] -> createResponse ResponseHeader.RoomNotJoined [||]
         | ResponseHeader.RoomNotLeaved, [||] -> createResponse ResponseHeader.RoomNotLeaved [||]
@@ -54,7 +54,6 @@ type Response =
         | ResponseHeader.RoomJoined, content -> createResponse ResponseHeader.RoomJoined content
         | ResponseHeader.PlayerRegistered, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.PlayerRegistered content
         | ResponseHeader.RoomCreated, content when content.Length = 4 (* The length of a RoomId *) -> createResponse ResponseHeader.RoomCreated content
-        | ResponseHeader.RoomLeaved, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.RoomLeaved content
         | _ -> None
 
     static member TryParse(bytes: byte [], out: Response outref) : bool =

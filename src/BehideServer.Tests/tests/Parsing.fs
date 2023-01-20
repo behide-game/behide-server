@@ -79,13 +79,13 @@ let tests =
               "PlayerNotRegistered", (ResponseHeader.PlayerNotRegistered, Array.empty)
 
               "RoomCreated", (ResponseHeader.RoomCreated, RoomId.Create() |> RoomId.ToBytes)
-              "RoomNotCreated", (ResponseHeader.RoomNotCreated, Array.empty)
               "RoomDeleted", (ResponseHeader.RoomDeleted, Array.empty)
+              "RoomNotCreated", (ResponseHeader.RoomNotCreated, Array.empty)
               "RoomNotDeleted", (ResponseHeader.RoomNotDeleted, Array.empty)
 
               "RoomJoined", (ResponseHeader.RoomJoined, fakeRoom |> Room.ToBytes)
+              "RoomLeaved", (ResponseHeader.RoomLeaved, Array.empty)
               "RoomNotJoined", (ResponseHeader.RoomNotJoined, Array.empty)
-              "RoomLeaved", (ResponseHeader.RoomLeaved, Id.CreateOf PlayerId |> PlayerId.ToBytes)
               "RoomNotLeaved", (ResponseHeader.RoomNotLeaved, Array.empty) ]
             |> testFixture (fun (header, content) _ ->
                 let response: Response = { Header = header; Content = content }
@@ -104,6 +104,5 @@ let tests =
             parseResponseWithContentTest ResponseHeader.PlayerRegistered (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
             parseResponseWithContentTest ResponseHeader.RoomCreated (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
             parseResponseWithContentTest ResponseHeader.RoomJoined fakeRoom Room.ToBytes Room.TryParse
-            parseResponseWithContentTest ResponseHeader.RoomLeaved (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
         ]
     ]
