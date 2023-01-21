@@ -34,7 +34,7 @@ jobs:
       if: always()
 
   build-push-image:
-    name: ⚡ Build and Push image
+    name: 📦 Build and Push image
     needs: perform-tests
     runs-on: ubuntu-latest
     permissions:
@@ -65,3 +65,13 @@ jobs:
         with:
           push: true
           tags: ghcr.io/behide-game/behide-server:latest
+
+  deploy:
+    name: ⚡ Deploy
+    runs-on: [self-hosted, behide-internal]
+    needs: build-push-image
+    steps:
+      - name: Deploy docker container webhook
+        uses: joelwmale/webhook-action@master
+        env:
+          WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
