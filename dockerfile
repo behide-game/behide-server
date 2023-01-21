@@ -9,7 +9,7 @@ COPY ./paket.lock ./paket.lock
 RUN dotnet tool restore
 RUN dotnet paket restore
 RUN dotnet restore ./src/BehideServer
-RUN dotnet publish ./src/BehideServer -c Release -o ./build --sc
+RUN dotnet publish ./src/BehideServer -c Release -o ./build
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /App
