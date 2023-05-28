@@ -1,4 +1,4 @@
 namespace BehideServer
 
 type Version =
-    static member GetVersion() = "0.1.0"
+    static member GetVersion() = "1.0.0"

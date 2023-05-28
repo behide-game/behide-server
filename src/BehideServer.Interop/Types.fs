@@ -1,7 +1,6 @@
 namespace BehideServer.Types
 
 open System
-open Smoosh
 
 type Id = Guid
 module Id =
@@ -26,36 +25,14 @@ type GuidHelper =
         | Some id -> out <- id; true
         | None -> false
 
-type PlayerId =
-    | PlayerId of Id
-    static member ToBytes (PlayerId playerId) = playerId |> Id.ToBytes
-    member this.ToBytes() = PlayerId.ToBytes this
-    static member TryParseBytes bytes = bytes |> Id.TryParseBytes |> Option.map PlayerId
-    static member TryParseBytes (bytes, out: PlayerId outref) =
-        let playerIdOpt =
-            bytes
-            |> Id.TryParseBytes
-            |> Option.map PlayerId
-
-        match playerIdOpt with
-        | Some playerId ->
-            out <- playerId
-            true
-        | None -> false
-
 type RoomId =
-    private
-    | RoomId of string
+    private | RoomId of string
 
     static member private possibilities =
         [| 'A'; 'B'; 'C'; 'D'; 'E'; 'F'; 'G'; 'H'; 'I'; 'J'; 'K'; 'L';
            'M'; 'N'; 'O'; 'P'; 'Q'; 'R'; 'S'; 'T'; 'U'; 'V'; 'W'; 'X';
            'Y'; 'Z'; '0'; '1'; '2'; '3'; '4'; '5'; '6'; '7'; '8'; '9'; |]
-
-    static member private possibilitiesByte =
-        [| 0uy; 1uy; 2uy; 3uy; 4uy; 5uy; 6uy; 7uy; 8uy; 9uy; 10uy; 11uy;
-           12uy; 13uy; 14uy; 15uy; 16uy; 17uy; 18uy; 19uy; 20uy; 21uy; 22uy; 23uy;
-           24uy; 25uy; 26uy; 27uy; 28uy; 29uy; 30uy; 31uy; 32uy; 33uy; 34uy; 35uy; |]
+    static member possibilitiesByte = RoomId.possibilities |> Array.indexed |> Array.map (fst >> byte)
 
     static member Create() : RoomId =
         [| 0..3 |]
@@ -110,31 +87,6 @@ type RoomId =
         | Some roomId -> out <- roomId; true
         | None -> false
 
-type Player =
-    { Id: PlayerId
-      IpPort: string
-      Username: string
-      CurrentRoomId: RoomId option }
-
 type Room =
     { Id: RoomId
-      EpicId: Id
-      CurrentRound: int
-      MaxPlayers: int
-      Owner: PlayerId
-      Players: Player [] }
-
-    static member private encoder = Encoder.mkEncoder<Room>()
-    static member private decoder = Decoder.mkDecoder<Room>()
-
-    static member ToBytes room = Room.encoder room |> Seq.toArray
-    member this.ToBytes() = Room.ToBytes this
-
-    static member TryParse (bytes: byte []) =
-        try Room.decoder (bytes |> Seq.toArray) |> Some
-        with | _ -> None
-
-    static member TryParse (bytes: byte [], out: Room outref) : bool =
-        match bytes |> Room.TryParse with
-        | Some room -> out <- room; true
-        | None -> false
+      EpicId: Id }

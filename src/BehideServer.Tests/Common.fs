@@ -39,14 +39,8 @@ type TestTcpClient() =
         |> Async.map (Expect.wantSome "Response should be parsable")
         |> Async.map (Response.expectHeader expectedHeader)
 
-    member this.RegisterPlayer() =
-        (Version.GetVersion(), "test user")
-        |> Msg.RegisterPlayer
-        |> this.SendMessage ResponseHeader.PlayerRegistered
-        |> Async.map (Response.parseContent PlayerId.TryParseBytes)
-
-    member this.CreateRoom playerId =
-        (playerId, Id.NewGuid())
+    member this.CreateRoom () =
+        Id.NewGuid() // Fake epic id
         |> Msg.CreateRoom
         |> this.SendMessage ResponseHeader.RoomCreated
         |> Async.map (Response.parseContent RoomId.TryParseBytes)

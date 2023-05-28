@@ -9,28 +9,33 @@ open FSharpx.Control
 [<Tests>]
 let tests =
     testList "Server response" [
-        testAsync "Server version checking" {
+        testAsync "Ping" {
             let tcp = TestTcpClient()
 
-            do! (Version.GetVersion() + " fake version", "test user")
-                |> Msg.RegisterPlayer
-                |> tcp.SendMessage ResponseHeader.BadServerVersion
+            do! Msg.Ping
+                |> tcp.SendMessage ResponseHeader.Ping
                 |> Async.Ignore
         }
 
-        testAsync "Register player" {
-            let tcp = TestTcpClient()
-            do! tcp.RegisterPlayer() |> Async.Ignore
-        }
+        testList "Server version checking" [
+            testAsync "Bad version" {
+                let tcp = TestTcpClient()
 
-        testAsync "Register player - already registered" {
-            let tcp = TestTcpClient()
-            do! tcp.RegisterPlayer() |> Async.Ignore
-            do! (Version.GetVersion(), "test user")
-                |> Msg.RegisterPlayer
-                |> tcp.SendMessage ResponseHeader.PlayerNotRegistered
-                |> Async.Ignore
-        }
+                do! (Version.GetVersion() + " fake version")
+                    |> Msg.CheckServerVersion
+                    |> tcp.SendMessage ResponseHeader.BadServerVersion
+                    |> Async.Ignore
+            }
+
+            testAsync "Correct version" {
+                let tcp = TestTcpClient()
+
+                do! Version.GetVersion()
+                    |> Msg.CheckServerVersion
+                    |> tcp.SendMessage ResponseHeader.CorrectServerVersion
+                    |> Async.Ignore
+            }
+        ]
 
         Tests.Rooms.tests
     ]

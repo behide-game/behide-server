@@ -3,25 +3,18 @@ namespace BehideServer.Types
 [<RequireQualifiedAccess>]
 type ResponseHeader =
     | Ping = 1uy
-    | BadServerVersion = 254uy
-    | FailedToParseMsg = 255uy
+    | FailedToParseMsg = 2uy
 
-    /// Contain PlayerId
-    | PlayerRegistered = 2uy
-    | PlayerNotRegistered = 3uy
+    | BadServerVersion = 3uy
+    | CorrectServerVersion = 4uy
 
     /// Contain RoomId
-    | RoomCreated = 4uy
-    | RoomNotCreated = 5uy
-    | RoomDeleted = 6uy
-    | RoomNotDeleted = 7uy
-
-    /// Contain Room
-    | RoomJoined = 8uy
-    | RoomNotJoined = 9uy
-
-    | RoomLeaved = 10uy
-    | RoomNotLeaved = 11uy
+    | RoomCreated = 5uy
+    | RoomNotCreated = 6uy
+    | RoomGet = 7uy
+    | RoomNotGet = 8uy
+    | RoomDeleted = 9uy
+    | RoomNotDeleted = 10uy
 
 [<RequireQualifiedAccess>]
 type Response =
@@ -42,18 +35,19 @@ type Response =
 
         match header |> LanguagePrimitives.EnumOfValue, content with
         | ResponseHeader.Ping, [||] -> createResponse ResponseHeader.Ping [||]
-        | ResponseHeader.PlayerNotRegistered, [||] -> createResponse ResponseHeader.PlayerNotRegistered [||]
-        | ResponseHeader.RoomDeleted, [||] -> createResponse ResponseHeader.RoomDeleted [||]
-        | ResponseHeader.RoomLeaved, [||] -> createResponse ResponseHeader.RoomLeaved [||]
-        | ResponseHeader.RoomNotCreated, [||] -> createResponse ResponseHeader.RoomNotCreated [||]
-        | ResponseHeader.RoomNotDeleted, [||] -> createResponse ResponseHeader.RoomNotDeleted [||]
-        | ResponseHeader.RoomNotJoined, [||] -> createResponse ResponseHeader.RoomNotJoined [||]
-        | ResponseHeader.RoomNotLeaved, [||] -> createResponse ResponseHeader.RoomNotLeaved [||]
         | ResponseHeader.BadServerVersion, [||] -> createResponse ResponseHeader.BadServerVersion [||]
+        | ResponseHeader.CorrectServerVersion, [||] -> createResponse ResponseHeader.CorrectServerVersion [||]
         | ResponseHeader.FailedToParseMsg, [||] -> createResponse ResponseHeader.FailedToParseMsg [||]
-        | ResponseHeader.RoomJoined, content -> createResponse ResponseHeader.RoomJoined content
-        | ResponseHeader.PlayerRegistered, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.PlayerRegistered content
+
         | ResponseHeader.RoomCreated, content when content.Length = 4 (* The length of a RoomId *) -> createResponse ResponseHeader.RoomCreated content
+        | ResponseHeader.RoomNotCreated, [||] -> createResponse ResponseHeader.RoomNotCreated [||]
+
+        | ResponseHeader.RoomGet, content when content.Length = 16 (* The length of a Guid *) -> createResponse ResponseHeader.RoomGet content
+        | ResponseHeader.RoomNotGet, [||] -> createResponse ResponseHeader.RoomNotGet [||]
+
+        | ResponseHeader.RoomDeleted, [||] -> createResponse ResponseHeader.RoomDeleted [||]
+        | ResponseHeader.RoomNotDeleted, [||] -> createResponse ResponseHeader.RoomNotDeleted [||]
+
         | _ -> None
 
     static member TryParse(bytes: byte [], out: Response outref) : bool =

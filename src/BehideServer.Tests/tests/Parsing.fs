@@ -13,51 +13,25 @@ let parseTest name (source: 'a) (toBytes: 'a -> byte []) (parser: byte [] -> 'a 
         |> fun parsed -> Expect.equal source parsed "Source value and parsed value should equals"
     )
 
-let parseResponseWithContentTest responseHeader content contentToBytes contentParser =
-    testCase (responseHeader |> string) (fun _ ->
-        let response: Response =
-            { Header = responseHeader
-              Content = content |> contentToBytes }
-
-        let parsedResponse =
-            response
-            |> Response.ToBytes
-            |> Response.TryParse
-            |> Expect.wantSome "Response should be parsable"
-
-        let parsedContent =
-            parsedResponse.Content
-            |> contentParser
-            |> Expect.wantSome "Response content should be parsable"
-
-        Expect.equal response parsedResponse "Responses should equal"
-        Expect.equal content parsedContent "Response contents should equal"
-    )
 
 let fakeRoom: Room =
     { Id = RoomId.Create()
-      EpicId = Id.NewGuid()
-      CurrentRound = 0
-      MaxPlayers = 3
-      Owner = Id.CreateOf PlayerId
-      Players = [||] }
+      EpicId = Id.NewGuid() }
 
 [<Tests>]
 let tests =
     testList "Parsing" [
         parseTest "Guid" (Id.NewGuid()) Id.ToBytes Id.TryParseBytes
         parseTest "RoomId" (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
-        parseTest "PlayerId" (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
-        parseTest "Room" fakeRoom Room.ToBytes Room.TryParse
+        testCase "Invalid msg parsing" (fun _ -> Expect.isNone ([||] |> Msg.TryParse) "Parsing an invalid msg should return None")
 
-        testCase "Msg.FailedToParse" (fun _ -> Expect.isNone ([||] |> Msg.TryParse) "Parsing an unexpected msg should return None")
         testList "Msg" (
             [ "Ping", Msg.Ping
-              "RegisterPlayer", Msg.RegisterPlayer ("fake-version", utf8String)
-              "CreateRoom", Msg.CreateRoom (Id.CreateOf PlayerId, Id.NewGuid())
-              "DeleteRoom", Msg.DeleteRoom (RoomId.Create())
-              "JoinRoom", Msg.JoinRoom (RoomId.Create())
-              "LeaveRoom", Msg.LeaveRoom ]
+              "FailedToParse", Msg.FailedToParse
+              "CheckServerVersion", Msg.CheckServerVersion (BehideServer.Version.GetVersion())
+              "CreateRoom", Msg.CreateRoom (Id.NewGuid())
+              "GetRoom", Msg.GetRoom (RoomId.Create())
+              "DeleteRoom", Msg.DeleteRoom (RoomId.Create()) ]
             |> testFixture (fun source _ ->
                 let parsed =
                     source
@@ -72,21 +46,19 @@ let tests =
 
         testList "Response" (
             [ "Ping", (ResponseHeader.Ping, Array.empty)
-              "BadServerVersion", (ResponseHeader.BadServerVersion, Array.empty)
               "FailedToParseMsg", (ResponseHeader.FailedToParseMsg, Array.empty)
 
-              "PlayerRegistered", (ResponseHeader.PlayerRegistered, Id.CreateOf PlayerId |> PlayerId.ToBytes)
-              "PlayerNotRegistered", (ResponseHeader.PlayerNotRegistered, Array.empty)
+              "BadServerVersion", (ResponseHeader.BadServerVersion, Array.empty)
+              "CorrectServerVersion", (ResponseHeader.CorrectServerVersion, Array.empty)
 
               "RoomCreated", (ResponseHeader.RoomCreated, RoomId.Create() |> RoomId.ToBytes)
-              "RoomDeleted", (ResponseHeader.RoomDeleted, Array.empty)
               "RoomNotCreated", (ResponseHeader.RoomNotCreated, Array.empty)
-              "RoomNotDeleted", (ResponseHeader.RoomNotDeleted, Array.empty)
 
-              "RoomJoined", (ResponseHeader.RoomJoined, fakeRoom |> Room.ToBytes)
-              "RoomLeaved", (ResponseHeader.RoomLeaved, Array.empty)
-              "RoomNotJoined", (ResponseHeader.RoomNotJoined, Array.empty)
-              "RoomNotLeaved", (ResponseHeader.RoomNotLeaved, Array.empty) ]
+              "RoomGet", (ResponseHeader.RoomGet, Id.NewGuid() |> Id.ToBytes)
+              "RoomNotGet", (ResponseHeader.RoomNotGet, Array.empty)
+
+              "RoomDeleted", (ResponseHeader.RoomDeleted, Array.empty)
+              "RoomNotDeleted", (ResponseHeader.RoomNotDeleted, Array.empty) ]
             |> testFixture (fun (header, content) _ ->
                 let response: Response = { Header = header; Content = content }
                 let parsed =
@@ -101,8 +73,26 @@ let tests =
         )
 
         testList "Response with content" [
-            parseResponseWithContentTest ResponseHeader.PlayerRegistered (Id.CreateOf PlayerId) PlayerId.ToBytes PlayerId.TryParseBytes
-            parseResponseWithContentTest ResponseHeader.RoomCreated (RoomId.Create()) RoomId.ToBytes RoomId.TryParseBytes
-            parseResponseWithContentTest ResponseHeader.RoomJoined fakeRoom Room.ToBytes Room.TryParse
+            testCase "RoomCreated" (fun _ ->
+                let content = RoomId.Create()
+
+                let response: Response =
+                    { Header = ResponseHeader.RoomCreated
+                      Content = content |> RoomId.ToBytes }
+
+                let parsedResponse =
+                    response
+                    |> Response.ToBytes
+                    |> Response.TryParse
+                    |> Expect.wantSome "Response should be parsable"
+
+                let parsedContent =
+                    parsedResponse.Content
+                    |> RoomId.TryParseBytes
+                    |> Expect.wantSome "Response content should be parsable"
+
+                Expect.equal response parsedResponse "Responses should equal"
+                Expect.equal content parsedContent "Response contents should equal"
+            )
         ]
     ]

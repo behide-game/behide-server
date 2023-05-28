@@ -10,38 +10,32 @@ type ResponseBuilder =
     internal
     | Ping
     | BadServerVersion
+    | CorrectServerVersion
     | FailedToParseMsg
 
-    | PlayerRegistered of PlayerId
-    | PlayerNotRegistered
-
     | RoomCreated of RoomId
-    | RoomDeleted
     | RoomNotCreated
-    | RoomNotDeleted
 
-    | RoomJoined of Room
-    | RoomLeaved
-    | RoomNotJoined
-    | RoomNotLeaved
+    | RoomGet of Id
+    | RoomNotGet
+
+    | RoomDeleted
+    | RoomNotDeleted
 
     static member internal ToResponse responseBuilder =
         match responseBuilder with
         | Ping -> Response.createNoContent ResponseHeader.Ping
         | BadServerVersion -> Response.createNoContent ResponseHeader.BadServerVersion
+        | CorrectServerVersion -> Response.createNoContent ResponseHeader.CorrectServerVersion
         | FailedToParseMsg -> Response.createNoContent ResponseHeader.FailedToParseMsg
 
-        | PlayerRegistered content -> Response.create ResponseHeader.PlayerRegistered (content |> PlayerId.ToBytes)
-        | PlayerNotRegistered -> Response.createNoContent ResponseHeader.PlayerNotRegistered
-
         | RoomCreated content -> Response.create ResponseHeader.RoomCreated (content |> RoomId.ToBytes)
-        | RoomDeleted -> Response.createNoContent ResponseHeader.RoomDeleted
         | RoomNotCreated -> Response.createNoContent ResponseHeader.RoomNotCreated
-        | RoomNotDeleted -> Response.createNoContent ResponseHeader.RoomNotDeleted
 
-        | RoomJoined room -> Response.create ResponseHeader.RoomJoined (room |> Room.ToBytes)
-        | RoomLeaved -> Response.createNoContent ResponseHeader.RoomLeaved
-        | RoomNotJoined -> Response.createNoContent ResponseHeader.RoomNotJoined
-        | RoomNotLeaved -> Response.createNoContent ResponseHeader.RoomNotLeaved
+        | RoomGet content -> Response.create ResponseHeader.RoomGet (content |> Id.ToBytes)
+        | RoomNotGet -> Response.createNoContent ResponseHeader.RoomNotGet
+
+        | RoomDeleted -> Response.createNoContent ResponseHeader.RoomDeleted
+        | RoomNotDeleted -> Response.createNoContent ResponseHeader.RoomNotDeleted
 
 let tap f x = x |> f; x

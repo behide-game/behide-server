@@ -4,18 +4,21 @@ open Smoosh
 
 [<RequireQualifiedAccess>]
 type Msg =
-    | FailedToParse
-
+    | FailedToParse // Placed first because it's the default value that smoosh take when it fails to parse.
     | Ping
-    /// Send the server version (string) and the player's username (string)
-    | RegisterPlayer of string * string
-    /// Send the PlayerId and the EpicId
-    | CreateRoom of PlayerId * Id
+
+    /// Send the server version (string)
+    | CheckServerVersion of string
+
+    /// Send the EpicId
+    | CreateRoom of Id
+
+    /// Send the RoomId
+    | GetRoom of RoomId
+
     /// Send the RoomId
     | DeleteRoom of RoomId
-    /// Send the RoomId
-    | JoinRoom of RoomId
-    | LeaveRoom
+
 
     static member private encoder = Encoder.mkEncoder<Msg>()
     static member private decoder = Decoder.mkDecoder<Msg>()
@@ -24,8 +27,9 @@ type Msg =
     member this.ToBytes() = this |> Msg.ToBytes
 
     static member TryParse(bytes: #seq<byte>) =
-        try Msg.decoder (bytes |> Seq.toArray) |> Some
-        with | _ -> None
-        |> function
-            | Some FailedToParse | None -> None
-            | msgOpt -> msgOpt
+        try
+            bytes
+            |> Seq.toArray
+            |> Msg.decoder
+            |> Some
+        with _ -> None

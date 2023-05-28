@@ -10,17 +10,6 @@ open SuperSimpleTcp
 
 let listenPort = 28000
 
-let onDisconnect (x: ConnectionEventArgs) =
-    // Unregister the player
-    State.state.Players
-    |> Seq.tryFind (fun kv -> kv.Value.IpPort = x.IpPort)
-    |> Option.map (fun player -> player.Key)
-    |> Option.map State.state.Players.TryRemove
-    |> function
-        | Some (true, player) -> Log.debug "Removed %s from registered players" player.Username
-        | Some (false, _) -> Log.debug "Failed to remove player who has disconnected"
-        | None -> Log.debug "Player who has disconnected was not registered: %A" x.IpPort
-
 [<EntryPoint>]
 let main _ =
     // Start server
@@ -31,12 +20,12 @@ let main _ =
 
     // Setup events
     tcp.Events.ClientConnected.Add(fun x -> Log.debug "Client connected: %A" x.IpPort)
-    tcp.Events.ClientDisconnected.Add onDisconnect
+    tcp.Events.ClientDisconnected.Add(fun x -> Log.debug "%A disconnected" x.IpPort)
 
-    tcp.Events.DataReceived.Add(fun x ->
+    tcp.Events.DataReceived.Add (fun x ->
         x.Data
         |> Msg.TryParse
-        |> Option.map (App.proceedMsg x.IpPort)
+        |> Option.map App.proceedMsg
         |> Option.defaultValue FailedToParseMsg
         |> ResponseBuilder.ToResponse
         |> Response.ToBytes
@@ -48,20 +37,16 @@ let main _ =
     while true do
         Console.ReadLine() |> ignore
 
-        if not State.state.Players.IsEmpty || not State.state.Rooms.IsEmpty then
-            Log.debug "[STATE] -> Players: %i; Rooms: %i" State.state.Players.Count State.state.Rooms.Count
-
-            Log.debug "[STATE] -> Players: %i" State.state.Players.Count
-            State.state.Players
-            |> Seq.iteri (fun index element -> Log.debug "\t[STATE] -> [PLAYER] %i: %A" index element)
-
+        if not State.state.Rooms.IsEmpty then
             Log.debug "[STATE] -> Rooms: %i" State.state.Rooms.Count
+
             State.state.Rooms
-            |> Seq.iteri (fun index element -> Log.debug "\t[STATE] -> [ROOM] %i: %A" index element)
+            |> Seq.iteri (fun index room -> Log.debug "\t[STATE] -> [ROOM] %i: %A" index room)
         else
             Log.debug "[STATE] -> State is empty"
 #else
-    while true do Console.ReadLine() |> ignore
+    while true do
+        Console.ReadLine() |> ignore
 #endif
 
     0
