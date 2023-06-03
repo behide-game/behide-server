@@ -2,6 +2,6 @@
 
 A server in [F#](https://fsharp.org/) that manages rooms for [Behide](https://github.com/behide-game/).
 
-<img src="[./Assets/Presentation card.png](https://raw.githubusercontent.com/behide-game/behide/main/Assets/Images/Card.png)"
+<img src="https://raw.githubusercontent.com/behide-game/behide/main/Assets/Images/Card.png"
      alt="Behide's presentation card"
      style="border-radius: 10px" />
